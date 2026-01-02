@@ -1,0 +1,259 @@
+/* Genius Transcription Assistant - Styles */
+
+#genius-transcriber-panel {
+  position: fixed !important;
+  top: 20px;
+  right: 20px;
+  width: 320px !important;
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  z-index: 999999 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+  font-size: 14px !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: default !important;
+}
+
+.gft-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px 8px 0 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.gft-header:active {
+  cursor: grabbing;
+}
+
+.gft-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.gft-toggle-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gft-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.gft-content {
+  padding: 16px;
+}
+
+.gft-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.gft-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.gft-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.gft-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.gft-btn {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  background: #f8f8f8;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 60px;
+}
+
+.gft-btn:hover {
+  background: #e8e8e8;
+  border-color: #ccc;
+}
+
+.gft-btn:active {
+  transform: scale(0.98);
+}
+
+.gft-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gft-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  width: 100%;
+}
+
+.gft-btn-primary:hover {
+  opacity: 0.9;
+  background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+}
+
+.gft-btn-secondary {
+  background: #f0f0f0;
+  border-color: #ccc;
+  width: 100%;
+}
+
+.gft-status {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+  min-height: 20px;
+}
+
+.gft-status-success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.gft-status-error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.gft-status-info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.gft-artist-list {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.gft-artist-list strong {
+  color: #333;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  #genius-transcriber-panel {
+    background: #1e1e1e;
+    border-color: #333;
+  }
+
+  .gft-section {
+    border-bottom-color: #333;
+  }
+
+  .gft-section h4 {
+    color: #e0e0e0;
+  }
+
+  .gft-btn {
+    background: #2a2a2a;
+    border-color: #444;
+    color: #e0e0e0;
+  }
+
+  .gft-btn:hover {
+    background: #333;
+    border-color: #555;
+  }
+
+  .gft-btn-secondary {
+    background: #2a2a2a;
+    border-color: #444;
+  }
+
+  .gft-status-success {
+    background: #1e3a1e;
+    color: #90ee90;
+    border-color: #2d5a2d;
+  }
+
+  .gft-status-error {
+    background: #3a1e1e;
+    color: #ff6b6b;
+    border-color: #5a2d2d;
+  }
+
+  .gft-status-info {
+    background: #1e2a3a;
+    color: #6bb6ff;
+    border-color: #2d3d5a;
+  }
+}
+
+/* Scrollbar styling */
+#genius-transcriber-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+#genius-transcriber-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+#genius-transcriber-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#genius-transcriber-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+@media (prefers-color-scheme: dark) {
+  #genius-transcriber-panel::-webkit-scrollbar-track {
+    background: #2a2a2a;
+  }
+
+  #genius-transcriber-panel::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+
+  #genius-transcriber-panel::-webkit-scrollbar-thumb:hover {
+    background: #777;
+  }
+}
+

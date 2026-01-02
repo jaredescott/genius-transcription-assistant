@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Genius Transcription Assistant",
+  "version": "1.0.0",
+  "description": "The ultimate tool for Genius.com contributors. Smart tags, auto-corrections, YouTube controls, and more!",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://genius.com/*",
+    "https://www.genius.com/*",
+    "https://www.youtube.com/*",
+    "https://youtube.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://genius.com/*",
+        "https://www.genius.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Genius Transcription Assistant"
+  }
+}
+
