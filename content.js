@@ -122,9 +122,9 @@
     panel.innerHTML = `
       <div class="gft-header" id="gft-header">
         <h3>🎵 Genius Transcription Assistant</h3>
-            <button class="gft-toggle-btn" id="gft-toggle-panel">−</button>
+            <button class="gft-toggle-btn" id="gft-toggle-panel">+</button>
           </div>
-          <div class="gft-content" id="gft-content">
+          <div class="gft-content" id="gft-content" style="display: none;">
             <!-- Smart Tags Section -->
             <div class="gft-section">
               <h4>Smart Tags</h4>
