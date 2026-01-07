@@ -184,6 +184,18 @@
 
     // Always insert panel into body for visibility
     document.body.appendChild(panel);
+    
+    // Ensure initial bottom positioning if no saved position
+    const savedPos = localStorage.getItem('gft-panel-position');
+    if (!savedPos) {
+      panel.style.bottom = '20px';
+      panel.style.right = '20px';
+      panel.style.top = 'auto';
+      panel.style.left = 'auto';
+    }
+    applyPanelAnchor(panel);
+    clampOrResetPosition(panel);
+    
     console.log('Genius Transcription Assistant panel created');
 
     // Setup drag functionality
@@ -213,20 +225,35 @@
     let xOffset = 0;
     let yOffset = 0;
 
-    // Load saved position
+    // Load saved position (convert stored top to bottom anchoring)
     const savedPos = localStorage.getItem('gft-panel-position');
     if (savedPos) {
       try {
         const pos = JSON.parse(savedPos);
-        panel.style.left = pos.x + 'px';
-        panel.style.top = pos.y + 'px';
+        // Calculate bottom based on stored top/left and current height
+        const rect = panel.getBoundingClientRect();
+        const bottom = Math.max(10, window.innerHeight - pos.y - rect.height);
+        const clampedLeft = Math.max(10, Math.min(pos.x, window.innerWidth - rect.width - 10));
+        panel.style.left = clampedLeft + 'px';
         panel.style.right = 'auto';
-        xOffset = pos.x;
-        yOffset = pos.y;
+        panel.style.top = 'auto';
+        panel.style.bottom = bottom + 'px';
+        xOffset = clampedLeft;
+        yOffset = window.innerHeight - bottom - rect.height;
+        ensurePanelWithinViewport(panel);
       } catch (e) {
         console.error('Error loading panel position:', e);
       }
+    } else {
+      // Default to bottom-right if no saved position
+      panel.style.top = 'auto';
+      panel.style.left = 'auto';
+      panel.style.bottom = '20px';
+      panel.style.right = '20px';
+      panel.style.height = 'auto';
     }
+    applyPanelAnchor(panel);
+    clampOrResetPosition(panel);
 
     header.addEventListener('mousedown', dragStart);
     document.addEventListener('mousemove', drag);
@@ -251,9 +278,14 @@
       }
       
       // Get current Y position
-      if (panel.style.top) {
+      if (panel.style.top && panel.style.top !== 'auto') {
         yOffset = parseInt(panel.style.top) || rect.top;
+      } else if (panel.style.bottom && panel.style.bottom !== 'auto') {
+        // Convert bottom positioning to top for dragging
+        const bottomValue = parseInt(panel.style.bottom) || 20;
+        yOffset = window.innerHeight - bottomValue - rect.height;
       } else {
+        // Default: calculate from current position
         yOffset = rect.top;
       }
 
@@ -263,10 +295,12 @@
       if (e.target === header || header.contains(e.target)) {
         isDragging = true;
         header.style.cursor = 'grabbing';
-        // Clear right positioning when dragging, ensure top is set
+        // Clear right/bottom positioning when dragging, ensure top/left is set
         panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
         panel.style.top = yOffset + 'px';
         panel.style.left = xOffset + 'px';
+        applyPanelAnchor(panel);
       }
     }
 
@@ -298,10 +332,12 @@
 
         // Save position
         const rect = panel.getBoundingClientRect();
+      clampOrResetPosition(panel);
         localStorage.setItem('gft-panel-position', JSON.stringify({
           x: rect.left,
           y: rect.top
         }));
+        applyPanelAnchor(panel);
       }
     }
 
@@ -1518,15 +1554,94 @@
 
   // Toggle panel visibility
   function togglePanel() {
+    const panel = document.getElementById('genius-transcriber-panel');
     const content = document.getElementById('gft-content');
     const btn = document.getElementById('gft-toggle-panel');
     
     if (content.style.display === 'none') {
       content.style.display = 'block';
       btn.textContent = '−';
+      
+      // Always force bottom anchoring when opening (so header stays accessible)
+      panel.style.top = 'auto';
+      panel.style.left = 'auto';
+      panel.style.bottom = '20px';
+      panel.style.right = '20px';
+      applyPanelAnchor(panel);
+      clampOrResetPosition(panel);
     } else {
       content.style.display = 'none';
       btn.textContent = '+';
+    }
+  }
+
+  // Decide whether to anchor top or bottom and adjust layout (header position)
+  function applyPanelAnchor(panel) {
+    const cs = window.getComputedStyle(panel);
+    const topVal = cs.top;
+    const bottomVal = cs.bottom;
+    const topNum = parseInt(topVal, 10);
+    const bottomNum = parseInt(bottomVal, 10);
+
+    const hasBottom = bottomVal !== 'auto' && !isNaN(bottomNum);
+    const hasTop = topVal !== 'auto' && !isNaN(topNum);
+
+    // Prefer bottom anchor if it exists and is closer than top, otherwise top
+    const useBottom = hasBottom && (!hasTop || bottomNum <= topNum);
+
+    panel.classList.remove('anchor-top', 'anchor-bottom');
+    if (useBottom) {
+      panel.classList.add('anchor-bottom');
+      // Ensure top is cleared when bottom-anchored
+      panel.style.top = 'auto';
+    } else {
+      panel.classList.add('anchor-top');
+      // Ensure bottom is cleared when top-anchored
+      panel.style.bottom = 'auto';
+    }
+  }
+
+  // Keep panel within viewport bounds to avoid it going off-screen
+  function ensurePanelWithinViewport(panel) {
+    const rect = panel.getBoundingClientRect();
+
+    // Horizontal bounds
+    if (rect.right > window.innerWidth - 10) {
+      const newRight = Math.max(10, window.innerWidth - rect.width - 10);
+      panel.style.right = `${newRight}px`;
+      panel.style.left = 'auto';
+    } else if (rect.left < 0) {
+      panel.style.left = '10px';
+      panel.style.right = 'auto';
+    }
+
+    // Vertical bounds
+    if (rect.bottom > window.innerHeight - 10) {
+      const newBottom = Math.max(10, window.innerHeight - rect.height - 10);
+      panel.style.bottom = `${newBottom}px`;
+      panel.style.top = 'auto';
+    } else if (rect.top < 0) {
+      panel.style.top = '10px';
+      panel.style.bottom = 'auto';
+    }
+  }
+
+  // Reset to bottom-right if off-screen after clamping
+  function clampOrResetPosition(panel) {
+    ensurePanelWithinViewport(panel);
+    const rect = panel.getBoundingClientRect();
+    const outOfView =
+      rect.bottom < 0 ||
+      rect.top > window.innerHeight ||
+      rect.right < 0 ||
+      rect.left > window.innerWidth;
+    if (outOfView) {
+      panel.style.top = 'auto';
+      panel.style.left = 'auto';
+      panel.style.bottom = '20px';
+      panel.style.right = '20px';
+      applyPanelAnchor(panel);
+      ensurePanelWithinViewport(panel);
     }
   }
 

@@ -2,7 +2,7 @@
 
 #genius-transcriber-panel {
   position: fixed !important;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   width: 320px !important;
   background: #ffffff !important;
@@ -12,12 +12,39 @@
   z-index: 999999 !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
   font-size: 14px !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  display: block !important;
+  max-height: calc(100vh - 40px) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
   visibility: visible !important;
   opacity: 1 !important;
   cursor: default !important;
+}
+
+/* Anchor-top (default): header on top, content below */
+#genius-transcriber-panel.anchor-top {
+  flex-direction: column !important;
+}
+
+#genius-transcriber-panel.anchor-top .gft-header {
+  border-radius: 8px 8px 0 0;
+}
+
+#genius-transcriber-panel.anchor-top .gft-content {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Anchor-bottom: header stays at bottom, content above */
+#genius-transcriber-panel.anchor-bottom {
+  flex-direction: column-reverse !important;
+}
+
+#genius-transcriber-panel.anchor-bottom .gft-header {
+  border-radius: 0 0 8px 8px;
+}
+
+#genius-transcriber-panel.anchor-bottom .gft-content {
+  border-radius: 8px 8px 0 0;
 }
 
 .gft-header {
@@ -27,9 +54,9 @@
   padding: 12px 16px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  border-radius: 8px 8px 0 0;
   cursor: grab;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .gft-header:active {
@@ -64,6 +91,13 @@
 
 .gft-content {
   padding: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Only show scrollbar when content actually overflows */
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
 }
 
 .gft-section {
