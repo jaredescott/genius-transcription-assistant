@@ -611,9 +611,9 @@
         if (artistName) {
           // Format according to Genius guidelines: 1st normal, 2nd italic, 3rd bold, 4th normal
           if (index === 1) {
-            artistName = `*${artistName}*`; // Italic (using Genius markdown)
+            artistName = `<i>${artistName}</i>`; // Italic (using HTML tags)
           } else if (index === 2) {
-            artistName = `**${artistName}**`; // Bold (using Genius markdown)
+            artistName = `<b>${artistName}</b>`; // Bold (using HTML tags)
           }
           artists.push(artistName);
         }
@@ -784,7 +784,7 @@
     showStatus(`Inserted ${tag}`, 'success');
   }
 
-  // Toggle bold/italic formatting (Genius.com uses markdown: *italic*, **bold**)
+  // Toggle bold/italic formatting (using HTML tags: <i>italic</i>, <b>bold</b>)
   function toggleFormatting(formatType) {
     const editor = getLyricsEditor();
     if (!editor) {
@@ -810,7 +810,7 @@
       const range = selection.getRangeAt(0);
       
       // Get text content to find position
-      const textContent = editor.textContent || '';
+      const textContent = editor.textContent || editor.innerText || '';
       const preRange = range.cloneRange();
       preRange.selectNodeContents(editor);
       preRange.setEnd(range.startContainer, range.startOffset);
@@ -828,33 +828,53 @@
       }
     }
 
-    // Check if already formatted
-    const isBold = selectedText.startsWith('**') && selectedText.endsWith('**');
-    const isItalic = selectedText.startsWith('*') && selectedText.endsWith('*') && !isBold;
+    // Helper function to strip HTML tags and get plain text
+    function stripHtmlTags(text) {
+      return text.replace(/<\/?[bi]>/gi, '').replace(/<\/?strong>/gi, '').replace(/<\/?em>/gi, '');
+    }
+
+    // Helper function to check if text is wrapped in HTML tags (as text strings)
+    function isWrappedInTag(text, tagNames) {
+      for (const tag of tagNames) {
+        const openTag = `<${tag}>`;
+        const closeTag = `</${tag}>`;
+        if (text.startsWith(openTag) && text.endsWith(closeTag)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Get plain text (strip any existing HTML tags)
+    const plainText = stripHtmlTags(selectedText);
     
-    let newText = selectedText;
+    // Check if already formatted with HTML tags (check for both <b>/<strong> and <i>/<em>)
+    const isBold = isWrappedInTag(selectedText, ['b', 'strong']);
+    const isItalic = isWrappedInTag(selectedText, ['i', 'em']);
+    
+    let newText = plainText;
     
     if (formatType === 'bold') {
       if (isBold) {
-        // Remove bold formatting
-        newText = selectedText.slice(2, -2);
+        // Already bold, remove formatting
+        newText = plainText;
       } else {
         // Remove italic if present, then add bold
         if (isItalic) {
-          newText = selectedText.slice(1, -1);
+          newText = plainText;
         }
-        newText = `**${newText}**`;
+        newText = `<b>${newText}</b>`;
       }
     } else if (formatType === 'italic') {
       if (isItalic) {
-        // Remove italic formatting
-        newText = selectedText.slice(1, -1);
+        // Already italic, remove formatting
+        newText = plainText;
       } else if (isBold) {
         // Can't have both, so remove bold and add italic
-        newText = `*${selectedText.slice(2, -2)}*`;
+        newText = `<i>${plainText}</i>`;
       } else {
         // Add italic formatting
-        newText = `*${selectedText}*`;
+        newText = `<i>${plainText}</i>`;
       }
     }
 
@@ -864,7 +884,7 @@
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
         
-        // Get the full text content to work with markdown
+        // Get the full text content (as plain text, HTML tags are inserted as text strings)
         const fullText = editor.textContent || editor.innerText || '';
         const preRange = range.cloneRange();
         preRange.selectNodeContents(editor);
@@ -872,7 +892,7 @@
         const beforeText = preRange.toString();
         const afterText = fullText.substring(beforeText.length + selectedText.length);
         
-        // Replace in the full text
+        // Replace in the full text (HTML tags inserted as text strings)
         const newFullText = beforeText + newText + afterText;
         editor.textContent = newFullText;
         
@@ -896,7 +916,7 @@
         selection.addRange(newRange);
       }
     } else {
-      // Textarea or input
+      // Textarea or input - insert HTML tags as text
       const text = editor.value;
       editor.value = text.substring(0, start) + newText + text.substring(end);
       editor.selectionStart = start;
