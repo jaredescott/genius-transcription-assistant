@@ -50,13 +50,105 @@
     return hasLyricsEditor || hasSongIndicators;
   }
 
-  // Only proceed if on a song page
-  if (!isSongPage()) {
-    console.log('Genius Transcription Assistant: Not a song page, skipping initialization');
-    return;
-  }
+  // Message handler for YouTube video detection (always available, even on non-song pages)
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'getYouTubeVideoFromGenius') {
+      const videoUrl = findYouTubeOnGeniusPage();
+      if (videoUrl) {
+        // Extract video info if possible
+        const videoIdMatch = videoUrl.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+        const videoId = videoIdMatch ? videoIdMatch[1] : null;
+        
+        sendResponse({
+          success: true,
+          videoUrl: videoUrl,
+          videoId: videoId,
+          videoInfo: videoId ? {
+            videoId: videoId,
+            title: document.title.replace(' | Genius', '').trim(),
+            channel: 'Genius'
+          } : null
+        });
+      } else {
+        sendResponse({ success: false, error: 'No YouTube video found' });
+      }
+      return true; // Keep channel open for async response
+    }
+  });
 
-  console.log('Genius Transcription Assistant script loaded');
+  // Function to find YouTube video on Genius page
+  function findYouTubeOnGeniusPage() {
+    // Method 1: Look for YouTube iframes (including lazy-loaded ones)
+    const iframes = document.querySelectorAll('iframe');
+    
+    for (const iframe of iframes) {
+      // Check src attribute
+      let src = iframe.src || iframe.getAttribute('src') || '';
+      
+      // Check data-src for lazy loading
+      if (!src) {
+        src = iframe.getAttribute('data-src') || '';
+      }
+      
+      // Check data-youtube-id attribute (some sites use this)
+      const youtubeId = iframe.getAttribute('data-youtube-id');
+      if (youtubeId && youtubeId.match(/^[a-zA-Z0-9_-]{11}$/)) {
+        return `https://www.youtube.com/watch?v=${youtubeId}`;
+      }
+      
+      if (src) {
+        // Check for various YouTube embed patterns
+        const patterns = [
+          /(?:youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+          /[?&]v=([a-zA-Z0-9_-]{11})/,
+          /youtu\.be\/([a-zA-Z0-9_-]{11})/
+        ];
+        
+        for (const pattern of patterns) {
+          const match = src.match(pattern);
+          if (match && match[1]) {
+            return `https://www.youtube.com/watch?v=${match[1]}`;
+          }
+        }
+      }
+    }
+    
+    // Method 2: Look for YouTube links in the page
+    const links = document.querySelectorAll('a[href*="youtube.com"], a[href*="youtu.be"]');
+    for (const link of links) {
+      const href = link.href || link.getAttribute('href') || '';
+      if (href.match(/youtube\.com\/watch|youtu\.be/)) {
+        // Extract video ID to ensure it's valid
+        const videoIdMatch = href.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+        if (videoIdMatch) {
+          return `https://www.youtube.com/watch?v=${videoIdMatch[1]}`;
+        }
+      }
+    }
+    
+    // Method 3: Look for YouTube video IDs in data attributes
+    const allElements = document.querySelectorAll('[data-video-id], [data-youtube-id], [data-youtube-video-id]');
+    for (const el of allElements) {
+      const videoId = el.getAttribute('data-video-id') || 
+                     el.getAttribute('data-youtube-id') || 
+                     el.getAttribute('data-youtube-video-id');
+      if (videoId && videoId.match(/^[a-zA-Z0-9_-]{11}$/)) {
+        return `https://www.youtube.com/watch?v=${videoId}`;
+      }
+    }
+    
+    // Method 4: Search in script tags for YouTube URLs
+    const scripts = document.querySelectorAll('script');
+    for (const script of scripts) {
+      const content = script.textContent || script.innerHTML || '';
+      const matches = content.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (matches && matches[1]) {
+        return `https://www.youtube.com/watch?v=${matches[1]}`;
+      }
+    }
+    
+    return null;
+  }
 
   // Check if already injected
   if (document.getElementById('genius-transcriber-panel')) {

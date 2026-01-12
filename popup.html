@@ -2,69 +2,221 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <style>
-    body {
-      width: 300px;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      margin: 0;
-    }
-    h2 {
-      margin: 0 0 12px 0;
-      font-size: 18px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    p {
-      margin: 8px 0;
-      font-size: 14px;
-      color: #666;
-      line-height: 1.5;
-    }
-    .shortcut {
-      background: #f0f0f0;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-family: monospace;
-      font-size: 12px;
-    }
-    .feature {
-      margin: 12px 0;
-      padding: 8px;
-      background: #f8f8f8;
-      border-radius: 4px;
-    }
-    .feature-title {
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 4px;
-    }
-  </style>
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h2>🎵 Genius Transcription Assistant</h2>
-  <p>Navigate to a Genius.com song page to start using the extension!</p>
-  
-  <div class="feature">
-    <div class="feature-title">Keyboard Shortcuts:</div>
-    <p><span class="shortcut">Ctrl + 1-5</span> Insert tags (Intro, Verse, Chorus, Bridge, Outro)</p>
-    <p><span class="shortcut">Ctrl + Shift + C</span> Correct all formatting</p>
-    <p><span class="shortcut">Ctrl + Z</span> Undo</p>
-    <p><span class="shortcut">Ctrl + Y</span> Redo</p>
-    <p><span class="shortcut">Ctrl + Alt + Space</span> YouTube play/pause</p>
-    <p><span class="shortcut">Ctrl + Alt + ←/→</span> YouTube seek ±5s</p>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <h1>🎵 Genius Assistant</h1>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="helper">
+        <span class="tab-icon">✨</span>
+        <span class="tab-label">Helper</span>
+      </button>
+      <button class="tab-btn" data-tab="transcribe">
+        <span class="tab-icon">📝</span>
+        <span class="tab-label">Transcribe</span>
+      </button>
+    </nav>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Helper Tab -->
+      <div class="tab-pane active" id="tab-helper">
+        <p class="intro-text">Navigate to a Genius.com song page to start using the extension!</p>
+        
+        <div class="feature-card">
+          <h3>⌨️ Keyboard Shortcuts</h3>
+          <div class="shortcut-list">
+            <div class="shortcut-item">
+              <kbd>Ctrl + 1-5</kbd>
+              <span>Insert tags (Intro, Verse, Chorus, Bridge, Outro)</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + Shift + C</kbd>
+              <span>Correct all formatting</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + Z</kbd>
+              <span>Undo</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + Y</kbd>
+              <span>Redo</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + Alt + Space</kbd>
+              <span>YouTube play/pause</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + Alt + ←/→</kbd>
+              <span>YouTube seek ±5s</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <h3>🚀 Features</h3>
+          <ul class="feature-list">
+            <li>✨ Smart tags & structure</li>
+            <li>🔧 Auto-corrections per Genius guidelines</li>
+            <li>📺 YouTube controls (play/pause/seek)</li>
+            <li>💾 Auto-save drafts</li>
+            <li>↶↷ Undo/Redo history</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Transcribe Tab -->
+      <div class="tab-pane" id="tab-transcribe">
+        <div class="transcribe-section">
+          <!-- URL Input -->
+          <div class="input-group">
+            <label for="youtube-url">YouTube Video URL or ID</label>
+            <div class="url-input-row">
+              <input type="text" id="youtube-url" placeholder="https://youtube.com/watch?v=..." />
+              <button id="btn-get-current" class="btn btn-secondary" title="Get from current tab">
+                <span>📍</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Video Info -->
+          <div id="video-info" class="video-info hidden">
+            <div class="video-thumbnail">
+              <img id="video-thumb" src="" alt="Video thumbnail" />
+            </div>
+            <div class="video-details">
+              <h4 id="video-title">Video Title</h4>
+              <p id="video-channel">Channel Name</p>
+            </div>
+          </div>
+
+          <!-- Settings (Collapsible) -->
+          <div class="settings-section">
+            <button id="btn-toggle-settings" class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;">
+              <span>⚙️ Settings</span>
+            </button>
+            <div id="api-settings" class="hidden" style="padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-sm); margin-bottom: 12px;">
+              <!-- Transcription Preference -->
+              <div class="input-group" style="margin-bottom: 12px;">
+                <label style="font-size: 11px; font-weight: 600; margin-bottom: 4px;">Transcription Method</label>
+                <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 4px;">
+                  <input type="checkbox" id="prefer-youtube-captions" style="margin: 0;" />
+                  <label for="prefer-youtube-captions" style="font-size: 11px; margin: 0; cursor: pointer;">Prefer YouTube captions (if available)</label>
+                </div>
+                <p style="font-size: 10px; color: var(--text-muted); margin: 4px 0 0 0; line-height: 1.3;">
+                  By default, uses Python server (faster, more accurate). Check to prefer YouTube captions first.
+                </p>
+              </div>
+              
+              <!-- Local Server Settings -->
+              <div class="input-group" style="margin-bottom: 12px;">
+                <label style="font-size: 11px; font-weight: 600; margin-bottom: 4px;">Local Python Server</label>
+                <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 4px;">
+                  <input type="checkbox" id="use-local-server" checked style="margin: 0;" />
+                  <label for="use-local-server" style="font-size: 11px; margin: 0; cursor: pointer;">Use local server (recommended)</label>
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <label for="server-port" style="font-size: 11px; margin: 0;">Port:</label>
+                  <input type="number" id="server-port" value="8765" min="1024" max="65535" 
+                         style="width: 80px; font-size: 11px; padding: 4px;" />
+                  <button id="btn-test-server" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px; flex: 1;">
+                    Test Connection
+                  </button>
+                </div>
+                <p style="font-size: 10px; color: var(--text-muted); margin: 4px 0 0 0; line-height: 1.3;">
+                  Run: <code style="background: var(--bg-elevated); padding: 2px 4px; border-radius: 2px; font-size: 9px;">python transcription_server.py</code>
+                </p>
+              </div>
+              
+              <!-- AssemblyAI API Key (Alternative) -->
+              <div class="input-group" style="margin-bottom: 0;">
+                <label for="api-key-input" style="font-size: 11px;">AssemblyAI API Key (alternative)</label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="password" id="api-key-input" placeholder="Enter API key" 
+                         style="flex: 1; font-size: 11px; padding: 6px;" />
+                  <button id="btn-save-api-key" class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">
+                    Save
+                  </button>
+                </div>
+                <p style="font-size: 10px; color: var(--text-muted); margin: 4px 0 0 0;">
+                  <a href="https://www.assemblyai.com/" target="_blank" style="color: var(--accent-primary);">Get free API key →</a>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Language Selection -->
+          <div class="input-group">
+            <label for="transcript-lang">Preferred Language</label>
+            <select id="transcript-lang">
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="pt">Portuguese</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="zh">Chinese</option>
+              <option value="auto">Auto-detect</option>
+            </select>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button id="btn-fetch-transcript" class="btn btn-primary">
+              <span class="btn-icon">🎤</span>
+              <span>Get Transcript</span>
+            </button>
+          </div>
+
+          <!-- Status -->
+          <div id="transcribe-status" class="status hidden"></div>
+
+          <!-- Transcript Output -->
+          <div id="transcript-output" class="transcript-output hidden">
+            <div class="transcript-header">
+              <h4>Transcript</h4>
+              <div class="transcript-meta">
+                <span id="transcript-lang-info" class="meta-badge"></span>
+                <span id="transcript-auto-badge" class="meta-badge auto hidden">Auto-generated</span>
+              </div>
+            </div>
+            <textarea id="transcript-text" rows="12" placeholder="Transcript will appear here..."></textarea>
+            <div class="transcript-actions">
+              <button id="btn-copy" class="btn btn-secondary">
+                <span>📋 Copy</span>
+              </button>
+              <button id="btn-format" class="btn btn-secondary">
+                <span>✨ Format for Genius</span>
+              </button>
+              <button id="btn-clear" class="btn btn-secondary">
+                <span>🗑️ Clear</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Available Languages (shown after fetch) -->
+          <div id="available-langs" class="available-langs hidden">
+            <h5>Available Languages:</h5>
+            <div id="lang-buttons" class="lang-buttons"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <span>v1.1.0</span>
+      <a href="https://genius.com" target="_blank">genius.com</a>
+    </footer>
   </div>
 
-  <div class="feature">
-    <div class="feature-title">Features:</div>
-    <p>✨ Smart tags & structure</p>
-    <p>🔧 Auto-corrections</p>
-    <p>📺 YouTube controls</p>
-    <p>💾 Auto-save drafts</p>
-    <p>↶↷ Undo/Redo history</p>
-  </div>
+  <script src="popup.js"></script>
 </body>
 </html>
-
