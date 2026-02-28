@@ -27,27 +27,85 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Tab switching
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const tabPanes = document.querySelectorAll('.tab-pane');
-  
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tabId = btn.dataset.tab;
-      
-      // Update button states
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      // Update pane visibility
-      tabPanes.forEach(pane => {
-        pane.classList.remove('active');
-        if (pane.id === `tab-${tabId}`) {
-          pane.classList.add('active');
+  // Helper tab: simple CLI workflow (extract URL + download cmd script)
+  const btnHelperExtractYt = document.getElementById('btn-helper-extract-yt');
+  const btnHelperDownloadCmd = document.getElementById('btn-helper-download-cmd');
+  const helperCliOutput = document.getElementById('helper-cli-output');
+  const helperYtUrlEl = document.getElementById('helper-yt-url');
+  const helperCliCommandEl = document.getElementById('helper-cli-command');
+  const helperCliStatus = document.getElementById('helper-cli-status');
+  let helperYouTubeUrl = '';
+
+  function showHelperCliStatus(message, isError = false) {
+    if (!helperCliStatus) return;
+    helperCliStatus.textContent = message;
+    helperCliStatus.style.color = isError ? 'var(--error)' : 'var(--accent-primary)';
+    helperCliStatus.classList.remove('hidden');
+    setTimeout(() => helperCliStatus.classList.add('hidden'), 3500);
+  }
+
+  if (btnHelperExtractYt && btnHelperDownloadCmd && helperCliOutput && helperYtUrlEl && helperCliCommandEl) {
+    btnHelperExtractYt.addEventListener('click', async () => {
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab || !tab.url || !tab.url.includes('genius.com')) {
+          showHelperCliStatus('Open a Genius song page first', true);
+          return;
         }
-      });
+
+        const response = await chrome.tabs.sendMessage(tab.id, { action: 'getYouTubeVideoFromGenius' });
+        if (!response || !response.success || !response.videoUrl) {
+          showHelperCliStatus('No YouTube video found on this Genius page', true);
+          return;
+        }
+
+        helperYouTubeUrl = response.videoUrl;
+        helperYtUrlEl.textContent = helperYouTubeUrl;
+        helperCliCommandEl.textContent = `transcribe-anything "${helperYouTubeUrl}" --device insane`;
+        helperCliOutput.classList.remove('hidden');
+        btnHelperDownloadCmd.disabled = false;
+        showHelperCliStatus('YouTube URL extracted');
+      } catch (error) {
+        showHelperCliStatus('Could not read current Genius tab', true);
+      }
     });
-  });
+
+    btnHelperDownloadCmd.addEventListener('click', () => {
+      if (!helperYouTubeUrl) {
+        showHelperCliStatus('Extract a YouTube URL first', true);
+        return;
+      }
+
+      const ps1Body = [
+        '$ErrorActionPreference = "Stop"',
+        '# Run directly and print transcript in terminal.',
+        '# No explicit output path is set in this script.',
+        '',
+        `transcribe-anything "${helperYouTubeUrl}" --device insane`,
+        '',
+        'Write-Host ""',
+        'Write-Host "Finished. Press Enter to close."',
+        'Read-Host'
+      ].join('\r\n');
+
+      const blob = new Blob([ps1Body], { type: 'text/plain;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = 'transcribe-genius-song.ps1';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+      showHelperCliStatus('Downloaded transcribe-genius-song.ps1');
+    });
+  }
+
+  // Transcribe panel has been removed from popup UI.
+  // Keep helper functionality active and skip legacy transcribe wiring.
+  if (!document.getElementById('tab-transcribe')) {
+    return;
+  }
 
   // Transcription functionality
   const urlInput = document.getElementById('youtube-url');
