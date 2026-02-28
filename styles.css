@@ -1,14 +1,16 @@
-/* Genius Transcription Assistant - Styles */
+/* Genius Transcription Assistant - Match Genius.com aesthetic */
+/* Header color is dynamic per song; content.js extracts from Genius page */
 
 #genius-transcriber-panel {
+  --gft-header-bg: rgb(200, 47, 47); /* Default; overridden by content.js */
   position: fixed !important;
   bottom: 20px;
   right: 20px;
   width: 320px !important;
   background: #ffffff !important;
-  border: 1px solid #e0e0e0 !important;
+  border: 1px solid #e5e5e5 !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
   z-index: 999999 !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
   font-size: 14px !important;
@@ -47,16 +49,20 @@
   border-radius: 8px 8px 0 0;
 }
 
+/* Header - dynamic accent from Genius page, white text (matches pf-nav) */
 .gft-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  min-height: 4.3rem;
+  background: var(--gft-header-bg, rgb(200, 47, 47)) !important;
+  color: #ffffff !important;
   cursor: grab;
   user-select: none;
   flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.9em;
 }
 
 .gft-header:active {
@@ -65,17 +71,19 @@
 
 .gft-header h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff !important;
 }
 
+/* Red circular toggle - Genius sidebar icon style */
 .gft-toggle-btn {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
   border: none;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
@@ -83,27 +91,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.15s ease;
 }
 
 .gft-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.4);
 }
 
+/* Main content - white background, black text */
 .gft-content {
   padding: 16px;
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1 1 auto;
   min-height: 0;
-  /* Only show scrollbar when content actually overflows */
+  background: #ffffff !important;
+  color: #000000 !important;
   scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
+  scrollbar-color: #bbb #f5f5f5;
 }
 
 .gft-section {
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #eee;
 }
 
 .gft-section:last-child {
@@ -112,10 +123,11 @@
 }
 
 .gft-section h4 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+  margin: 0 0 10px 0;
+  font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: #000000 !important;
+  letter-spacing: 0.02em;
 }
 
 .gft-btn-group {
@@ -125,23 +137,24 @@
   margin-bottom: 8px;
 }
 
+/* Buttons - clean minimal, light gray borders */
 .gft-btn {
   padding: 8px 12px;
-  border: 1px solid #ddd;
-  background: #f8f8f8;
+  border: 1px solid #d0d0d0;
+  background: #ffffff;
   border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  color: #333;
-  transition: all 0.2s;
+  color: #000000;
+  transition: all 0.15s ease;
   flex: 1;
   min-width: 60px;
 }
 
 .gft-btn:hover {
-  background: #e8e8e8;
-  border-color: #ccc;
+  background: #f8f8f8;
+  border-color: #bbb;
 }
 
 .gft-btn:active {
@@ -153,22 +166,29 @@
   cursor: not-allowed;
 }
 
+/* Primary - uses dynamic accent color */
 .gft-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
+  background: var(--gft-header-bg, rgb(200, 47, 47)) !important;
+  color: #ffffff !important;
+  border: none !important;
   width: 100%;
 }
 
 .gft-btn-primary:hover {
   opacity: 0.9;
-  background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+  filter: brightness(1.05);
 }
 
 .gft-btn-secondary {
-  background: #f0f0f0;
-  border-color: #ccc;
+  background: #fafafa;
+  border: 1px solid #d0d0d0;
+  color: #000000;
   width: 100%;
+}
+
+.gft-btn-secondary:hover {
+  background: #f0f0f0;
+  border-color: #bbb;
 }
 
 .gft-status {
@@ -178,116 +198,82 @@
   font-size: 12px;
   text-align: center;
   min-height: 20px;
+  color: #333;
 }
 
 .gft-status-success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #c8e6c9;
 }
 
 .gft-status-error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background: #ffebee;
+  color: #b71c1c;
+  border: 1px solid #ffcdd2;
 }
 
 .gft-status-info {
-  background: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
+  background: #e3f2fd;
+  color: #0d47a1;
+  border: 1px solid #bbdefb;
 }
 
 .gft-artist-list {
   font-size: 12px;
-  color: #666;
+  color: #444;
   line-height: 1.4;
 }
 
 .gft-artist-list strong {
-  color: #333;
+  color: #000000;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  #genius-transcriber-panel {
-    background: #1e1e1e;
-    border-color: #333;
-  }
-
-  .gft-section {
-    border-bottom-color: #333;
-  }
-
-  .gft-section h4 {
-    color: #e0e0e0;
-  }
-
-  .gft-btn {
-    background: #2a2a2a;
-    border-color: #444;
-    color: #e0e0e0;
-  }
-
-  .gft-btn:hover {
-    background: #333;
-    border-color: #555;
-  }
-
-  .gft-btn-secondary {
-    background: #2a2a2a;
-    border-color: #444;
-  }
-
-  .gft-status-success {
-    background: #1e3a1e;
-    color: #90ee90;
-    border-color: #2d5a2d;
-  }
-
-  .gft-status-error {
-    background: #3a1e1e;
-    color: #ff6b6b;
-    border-color: #5a2d2d;
-  }
-
-  .gft-status-info {
-    background: #1e2a3a;
-    color: #6bb6ff;
-    border-color: #2d3d5a;
-  }
-}
-
-/* Scrollbar styling */
+/* Scrollbar - light theme only */
 #genius-transcriber-panel::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 #genius-transcriber-panel::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: #f5f5f5;
+  border-radius: 3px;
 }
 
 #genius-transcriber-panel::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: #bbb;
+  border-radius: 3px;
 }
 
 #genius-transcriber-panel::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #999;
 }
 
-@media (prefers-color-scheme: dark) {
-  #genius-transcriber-panel::-webkit-scrollbar-track {
-    background: #2a2a2a;
-  }
-
-  #genius-transcriber-panel::-webkit-scrollbar-thumb {
-    background: #555;
-  }
-
-  #genius-transcriber-panel::-webkit-scrollbar-thumb:hover {
-    background: #777;
-  }
+/* Section dialog - match panel aesthetic */
+#gft-section-dialog .gft-dialog-cancel {
+  padding: 8px 16px;
+  border: 1px solid #d0d0d0;
+  background: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #000;
+  font-size: 14px;
 }
 
+#gft-section-dialog .gft-dialog-cancel:hover {
+  background: #f8f8f8;
+}
+
+#gft-section-dialog .gft-dialog-insert {
+  padding: 8px 16px;
+  border: none;
+  background: var(--gft-header-bg, rgb(200, 47, 47));
+  color: #ffffff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+#gft-section-dialog .gft-dialog-insert:hover {
+  filter: brightness(1.1);
+}

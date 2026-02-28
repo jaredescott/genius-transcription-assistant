@@ -1,5 +1,32 @@
 // Popup script for Genius Transcription Assistant
 document.addEventListener('DOMContentLoaded', () => {
+  // Reset panel position (Helper tab)
+  const btnResetPanel = document.getElementById('btn-reset-panel');
+  const resetPanelStatus = document.getElementById('reset-panel-status');
+  if (btnResetPanel && resetPanelStatus) {
+    btnResetPanel.addEventListener('click', async () => {
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab || !tab.url || !tab.url.includes('genius.com')) {
+          resetPanelStatus.textContent = 'Open a Genius song page first';
+          resetPanelStatus.classList.remove('hidden');
+          setTimeout(() => resetPanelStatus.classList.add('hidden'), 3000);
+          return;
+        }
+        const response = await chrome.tabs.sendMessage(tab.id, { action: 'resetPanelPosition' });
+        if (response && response.success) {
+          resetPanelStatus.textContent = 'Panel reset!';
+          resetPanelStatus.classList.remove('hidden');
+          setTimeout(() => resetPanelStatus.classList.add('hidden'), 3000);
+        }
+      } catch (e) {
+        resetPanelStatus.textContent = 'Open a Genius song page first';
+        resetPanelStatus.classList.remove('hidden');
+        setTimeout(() => resetPanelStatus.classList.add('hidden'), 3000);
+      }
+    });
+  }
+
   // Tab switching
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');

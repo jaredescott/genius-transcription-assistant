@@ -74,6 +74,18 @@
       }
       return true; // Keep channel open for async response
     }
+    if (request.action === 'resetPanelPosition') {
+      try {
+        localStorage.removeItem('gft-panel-position');
+        const panel = document.getElementById('genius-transcriber-panel');
+        if (panel) panel.remove();
+        init();
+        sendResponse({ success: true });
+      } catch (e) {
+        sendResponse({ success: false, error: e.message });
+      }
+      return false;
+    }
   });
 
   // Function to find YouTube video on Genius page
@@ -201,6 +213,57 @@
     }
   }
 
+  // Extract accent/header color from Genius.com song page (dynamic per song)
+  function extractGeniusHeaderColor() {
+    const defaultAccent = 'rgb(200, 47, 47)'; // Genius song header red fallback
+
+    // 1. data-accent-color or data-accent attribute
+    const dataEl = document.querySelector('[data-accent-color], [data-accent]');
+    if (dataEl) {
+      const color = dataEl.getAttribute('data-accent-color') || dataEl.getAttribute('data-accent');
+      if (color && (color.startsWith('#') || /^rgb|^hsl/.test(color))) return color;
+    }
+
+    // 2. CSS variables on :root or song container
+    const root = document.documentElement;
+    const vars = ['--accent-color', '--song-accent', '--header-color', '--primary-color'];
+    for (const v of vars) {
+      const val = getComputedStyle(root).getPropertyValue(v).trim();
+      if (val) return val;
+    }
+
+    // 3. Song header / nav / page container background
+    const selectors = [
+      '.pf-nav',
+      '[class*="pf-nav"]',
+      '[class*="SongHeader"]',
+      '[data-testid="song-header"]',
+      '[class*="Header"][class*="Container"]',
+      '[class*="LyricsHeader"]',
+      '[class*="PageHeader"]',
+      'header [style*="background"]'
+    ];
+    for (const sel of selectors) {
+      try {
+        const el = document.querySelector(sel);
+        if (el) {
+          const bg = window.getComputedStyle(el).backgroundColor;
+          if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+            return bg;
+          }
+          const bgImage = window.getComputedStyle(el).backgroundImage;
+          if (bgImage && bgImage !== 'none') {
+            const hexMatch = bgImage.match(/#[0-9A-Fa-f]{3,6}/);
+            if (hexMatch) return hexMatch[0];
+            const rgbMatch = bgImage.match(/rgb(a?)\((\d+),\s*(\d+),\s*(\d+)/);
+            if (rgbMatch) return `rgb(${rgbMatch[2]}, ${rgbMatch[3]}, ${rgbMatch[4]})`;
+          }
+        }
+      } catch (e) { /* ignore */ }
+    }
+    return defaultAccent;
+  }
+
   // Create main UI panel
   function createUI() {
     // Remove any existing panel first
@@ -208,6 +271,8 @@
     if (existingPanel) {
       existingPanel.remove();
     }
+
+    const headerColor = extractGeniusHeaderColor();
 
     const panel = document.createElement('div');
     panel.id = 'genius-transcriber-panel';
@@ -274,6 +339,9 @@
           </div>
     `;
 
+    // Apply Genius page header color (dynamic per song)
+    panel.style.setProperty('--gft-header-bg', headerColor);
+
     // Always insert panel into body for visibility
     document.body.appendChild(panel);
     
@@ -298,10 +366,12 @@
       try {
         setupEventListeners();
         detectArtists(); // Detect artists after UI is ready
+        // Re-extract header color after DOM settles (Genius may load header async)
+        panel.style.setProperty('--gft-header-bg', extractGeniusHeaderColor());
       } catch (error) {
         console.error('Error setting up event listeners:', error);
       }
-    }, 100);
+    }, 500);
   }
 
   // Setup drag functionality for the panel
@@ -592,13 +662,17 @@
         </p>
       </div>
       <div style="display: flex; gap: 8px; justify-content: flex-end;">
-        <button id="gft-dialog-cancel" style="padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
-        <button id="gft-dialog-insert" style="padding: 8px 16px; border: none; background: #667eea; color: white; border-radius: 4px; cursor: pointer; font-weight: 600;">Insert</button>
+        <button id="gft-dialog-cancel" class="gft-dialog-btn gft-dialog-cancel">Cancel</button>
+        <button id="gft-dialog-insert" class="gft-dialog-btn gft-dialog-insert">Insert</button>
       </div>
     `;
 
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
+
+    // Pass accent color to dialog for Insert button (overlay is outside panel)
+    const accent = document.getElementById('genius-transcriber-panel')?.style.getPropertyValue('--gft-header-bg') || extractGeniusHeaderColor();
+    overlay.style.setProperty('--gft-header-bg', accent);
 
     const artistInputsContainer = dialog.querySelector('#gft-artist-inputs');
     let artistCount = 1;
@@ -1358,8 +1432,11 @@
   function setupKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
       // Only work when not typing in input fields (but allow in editor)
+      // isContentEditable catches nested elements (Genius uses contenteditable with child spans/divs)
       const isInDialog = document.getElementById('gft-section-dialog');
-      if (!isInDialog && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.contentEditable === 'true')) {
+      const isInEditable = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' ||
+        e.target.contentEditable === 'true' || e.target.isContentEditable;
+      if (!isInDialog && isInEditable) {
         // Ctrl+1-5 for tags (opens dialog)
         if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key >= '1' && e.key <= '5') {
           e.preventDefault();
