@@ -1585,12 +1585,36 @@
   // Detect artists on page
   function detectArtists() {
     const artists = new Set();
+    const songHeader = document.querySelector('[class*="SongHeader"]') ||
+                      document.querySelector('[data-testid="song-page-header"]') ||
+                      document.querySelector('[data-testid="song-header"]') ||
+                      document.querySelector('h1')?.closest('section, article, div');
+    
+    // Normalize UI text into a plausible artist token
+    function normalizeArtistName(text) {
+      if (!text || typeof text !== 'string') return '';
+      
+      let cleaned = text.replace(/\s+/g, ' ').trim();
+      
+      // Remove common UI counters that can leak from badges/nav text
+      // e.g. "(63) Noah Kahan" or "(63)Noah Kahan"
+      cleaned = cleaned.replace(/^\(\d+\)\s*/g, '');
+      cleaned = cleaned.replace(/^\d+[\s.:_-]+/g, '');
+      cleaned = cleaned.replace(/\s*\/\s*\d+\s*$/, '');
+      cleaned = cleaned.replace(/\s+\d{2,4}\s*$/, '');
+      cleaned = cleaned.replace(/\s*\(\d+\)\s*$/g, '');
+      
+      return cleaned.trim();
+    }
     
     // Helper function to validate artist name
     function isValidArtistName(text) {
       if (!text || typeof text !== 'string') return false;
       
       const trimmed = text.trim();
+      
+      // If numeric badge markers survive cleanup, reject it as noisy UI text.
+      if (/\(\d+\)/.test(trimmed)) return false;
       
       // Must be reasonable length (1-50 characters)
       if (trimmed.length < 1 || trimmed.length > 50) return false;
@@ -1603,6 +1627,11 @@
       
       // Must not contain image tags or other HTML entities
       if (trimmed.match(/&[a-z]+;/i)) return false;
+      
+      // Song titles on Genius often appear as "… Lyrics" in the tab title; never treat as an artist
+      if (/\blyrics\s*$/i.test(trimmed)) {
+        return false;
+      }
       
       // Must not be common navigation/footer text
       const excludedTerms = [
@@ -1627,16 +1656,11 @@
     
     // Method 1: Look for artist name in song header area (most reliable)
     try {
-      // Look for the main artist name near the song title
-      const songHeader = document.querySelector('[class*="SongHeader"]') || 
-                        document.querySelector('[class*="Header"]') ||
-                        document.querySelector('h1')?.closest('div');
-      
       if (songHeader) {
         // Find artist links within the header area only
         const headerArtistLinks = songHeader.querySelectorAll('a[href*="/artists/"]');
         headerArtistLinks.forEach(link => {
-          const text = link.textContent?.trim();
+          const text = normalizeArtistName(link.textContent);
           if (isValidArtistName(text)) {
             artists.add(text);
           }
@@ -1646,7 +1670,7 @@
         const headerText = songHeader.textContent || '';
         const artistMatch = headerText.match(/(?:by|artist|performed by)[:\s]+([A-Z][a-zA-Z\s&]+)/i);
         if (artistMatch && artistMatch[1]) {
-          const artistName = artistMatch[1].trim();
+          const artistName = normalizeArtistName(artistMatch[1]);
           if (isValidArtistName(artistName)) {
             artists.add(artistName);
           }
@@ -1658,9 +1682,11 @@
     
     // Method 2: Look for specific Genius.com data attributes
     try {
-      const artistElements = document.querySelectorAll('[data-testid="artist-name"], [class*="Artist"][class*="Name"]');
+      const artistElements = songHeader
+        ? songHeader.querySelectorAll('[data-testid="artist-name"], [class*="Artist"][class*="Name"]')
+        : document.querySelectorAll('[data-testid="artist-name"]');
       artistElements.forEach(el => {
-        const text = el.textContent?.trim();
+        const text = normalizeArtistName(el.textContent);
         if (isValidArtistName(text)) {
           artists.add(text);
         }
@@ -1669,16 +1695,21 @@
       // Ignore
     }
     
-    // Method 3: Extract from page title (usually reliable)
+    // Method 3: Extract from page title (fallback when header links miss someone)
+    // Genius uses "Artist(s) – Song Title | Genius", not song-first.
     try {
       const pageTitle = document.title;
-      // Format: "Song Name - Artist Name | Genius Lyrics"
-      const titleMatch = pageTitle.match(/(.+?)\s*[-–—]\s*([^-|]+?)\s*[|]/i);
-      if (titleMatch && titleMatch[2]) {
-        const artistName = titleMatch[2].trim();
-        if (isValidArtistName(artistName)) {
-          artists.add(artistName);
-        }
+      const titleMatch = pageTitle.match(/^(.+?)\s*[-–—]\s*(.+?)\s*\|\s*Genius/i);
+      if (titleMatch && titleMatch[1]) {
+        const artistPart = normalizeArtistName(titleMatch[1]);
+        // Comma-separated credits (e.g. "Noah Kahan, Gabe Simon"); avoid splitting on "&"
+        // so names like "Tom Petty & The Heartbreakers" stay intact.
+        const names = artistPart.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
+        names.forEach(name => {
+          if (isValidArtistName(name)) {
+            artists.add(name);
+          }
+        });
       }
     } catch (e) {
       // Ignore
